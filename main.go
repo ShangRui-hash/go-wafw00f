@@ -18,6 +18,6 @@ func main() {
 	log.Default("url : " + params.Url)
 	log.Default("Start Go-wafw00f")
 	waf.ResolveWafLib()
-	res := waf.DetectWaf("http://www.lxxcpx.com/t")
+	res := waf.DetectWaf(params.Url)
 	util.PrintWafResult(res)
 }

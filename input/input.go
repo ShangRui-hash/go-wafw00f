@@ -14,6 +14,7 @@ func ParseInput() Input {
 	var result Input
 	var url string
 	var help bool
+	const prefix = "http://"
 	flag.StringVar(&url, "u", "", "Input Target Url")
 	flag.BoolVar(&help, "h", false, "Help Information")
 	flag.Parse()
@@ -21,12 +22,11 @@ func ParseInput() Input {
 		flag.PrintDefaults()
 		os.Exit(0)
 	}
-	url = strings.TrimSpace(url)
-	if url == "" {
+	if strings.TrimSpace(url) == "" {
 		return result
 	}
-	if !strings.HasPrefix(url, "http") {
-		url = "http://" + url
+	if !strings.HasPrefix(url, prefix) {
+		url = prefix + url
 	}
 	result.Url = url
 	return result
