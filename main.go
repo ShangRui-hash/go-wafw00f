@@ -1,11 +1,12 @@
 package main
 
 import (
-	"go-wafw00f/input"
-	"go-wafw00f/log"
-	"go-wafw00f/util"
-	"go-wafw00f/waf"
 	"strings"
+
+	"github.com/ShangRui-hash/go-wafw00f/input"
+	"github.com/ShangRui-hash/go-wafw00f/log"
+	"github.com/ShangRui-hash/go-wafw00f/util"
+	"github.com/ShangRui-hash/go-wafw00f/waf"
 )
 
 func main() {
@@ -16,7 +17,7 @@ func main() {
 		return
 	}
 	log.Default("url : " + params.Url)
-	log.Default("Start Go-wafw00f")
+	log.Default("Start go-wafw00f")
 	waf.ResolveWafLib()
 	res := waf.DetectWaf(params.Url)
 	util.PrintWafResult(res)

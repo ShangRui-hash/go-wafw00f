@@ -1,9 +1,10 @@
 package waf
 
 import (
-	"go-wafw00f/http"
 	"regexp"
 	"strings"
+
+	"github.com/ShangRui-hash/go-wafw00f/http"
 )
 
 var httpClient http.Client

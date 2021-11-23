@@ -1,8 +1,9 @@
 package util
 
 import (
-	"go-wafw00f/log"
 	"io/ioutil"
+
+	"github.com/ShangRui-hash/go-wafw00f/log"
 )
 
 func GetAllFile(pathname string) ([]string, error) {

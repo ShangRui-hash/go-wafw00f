@@ -1,14 +1,15 @@
 package waf
 
 import (
-	jsoniter "github.com/json-iterator/go"
-	"go-wafw00f/log"
-	"go-wafw00f/model"
-	"go-wafw00f/util"
 	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/ShangRui-hash/go-wafw00f/log"
+	"github.com/ShangRui-hash/go-wafw00f/model"
+	"github.com/ShangRui-hash/go-wafw00f/util"
+	jsoniter "github.com/json-iterator/go"
 )
 
 var Waf model.Waf

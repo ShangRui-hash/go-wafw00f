@@ -2,7 +2,8 @@ package util
 
 import (
 	"bytes"
-	"go-wafw00f/log"
+
+	"github.com/ShangRui-hash/go-wafw00f/log"
 )
 
 func PrintWafResult(items []string) {
