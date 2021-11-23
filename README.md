@@ -2,27 +2,33 @@
 
 ## 介绍
 
-- ！该项目暂时不进行维护，因为作者是学生，目前在上课和准备秋招，对此感到抱歉
 - WAFW00F是一款优秀的web应用防火墙识别开源工具：https://github.com/EnableSecurity/wafw00f
+- GO-WAFW00F forked from EmYiQing/go-wafw00f,由于作者不在维护，所以我接盘了
 - 使用Golang重写的原因：Python环境配置不便利，Golang打包生成可执行文件直接运行
-- 目前还在开发阶段，规则解析存在小问题，考虑加入协程提高执行效率
-- 项目显示由Python编写其实是因为直接复制了数量较大的py规则库，使用golang正则解析
+
+## 安装
+
+```shell
+go install github.com/ShangRui-hash/go-wafw00f@latest
+```
 
 ## 快速开始
 
 直接在github的release页面下载可执行文件：[下载地址](https://github.com/EmYiQing/go-wafw00f/releases/)
 
 ```shell
-./go-wafw00f.exe -u http://www.xxx.com/
+# 探测waf
+go-wafw00f run  -u http://www.xxx.com -r rule.json
+
+# 解析wafw00f的插件库为json文件
+go-wafw00f parse --lib ./lib -dst rule.json
 ```
 
-![](https://xuyiqing-1257927651.cos.ap-beijing.myqcloud.com/waf/waf.png)
 
 ## 简单原理
 
-- 使用官方的py文件，但不以python执行，因为太过于麻烦，使用正则解析匹配规则
-- 将解析后的规则集保存为json文件，每次执行首先检测json文件，提高效率
-- 如果官方库有更新，直接替换`./waf/lib`目录即可同步更新
+- parse 命令使用正则表达式来解析wafw00f的插件库，生成json文件 (todo:这是原作者的思路，但是这个思路问题大大的：对于any,all 没法完全解析，需要重新构思一个解决方案)
+- run 命令读取json格式的规则文件，探测waf
 
 ## 支持WAF列表
 ```
