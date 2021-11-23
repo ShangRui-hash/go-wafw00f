@@ -14,8 +14,6 @@ go install github.com/ShangRui-hash/go-wafw00f@latest
 
 ## 快速开始
 
-直接在github的release页面下载可执行文件：[下载地址](https://github.com/EmYiQing/go-wafw00f/releases/)
-
 ```shell
 # 探测waf
 go-wafw00f run  -u http://www.xxx.com -r rule.json
