@@ -37,29 +37,34 @@ func Init() error {
 
 type Resp struct {
 	StatusCode int
+	URL        string
 	Body       string
 	Headers    map[string]string
 }
 
-func Get(url string) (resp *Resp, err error) {
-	response, err := client.Get(url)
+func Get(u string) (resp *Resp, err error) {
+	URL, err := url.Parse(u)
 	if err != nil {
-		logrus.Error("client.Get failed,err:", err)
+		return nil, err
+	}
+	response, err := client.Get(u)
+	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		logrus.Error("ioutil.ReadAll failed,err:", err)
 		return nil, err
 	}
 	headers := make(map[string]string)
 	for k, v := range response.Header {
 		headers[k] = strings.Join(v, "")
 	}
+
 	return &Resp{
 		StatusCode: response.StatusCode,
 		Body:       string(body),
 		Headers:    headers,
+		URL:        URL.Scheme + "://" + URL.Host,
 	}, nil
 }

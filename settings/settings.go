@@ -9,9 +9,11 @@ var (
 type RunConfig struct {
 	URL          string
 	RuleFilePath string
+	Proxy        string
 	Debug        bool
 	Silent       bool
-	Proxy        string
+	Stdin        bool
+	Routine      int
 }
 
 //ParseConfig is the configuration for the parse

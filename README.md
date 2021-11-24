@@ -3,8 +3,9 @@
 ## 介绍
 
 - WAFW00F是一款优秀的web应用防火墙识别开源工具：https://github.com/EnableSecurity/wafw00f
-- GO-WAFW00F forked from EmYiQing/go-wafw00f,由于作者不在维护，所以我接盘了
 - 使用Golang重写的原因：Python环境配置不便利，Golang打包生成可执行文件直接运行
+- GO-WAFW00F forked from EmYiQing/go-wafw00f,由于作者不在维护，所以我接盘了,并对原来的代码进行大幅的修改。
+
 
 ## 安装
 
@@ -20,16 +21,63 @@ go-wafw00f run  -u http://www.xxx.com -r rule.json
 
 # 解析wafw00f的插件库为json文件
 go-wafw00f parse --lib ./lib -dst rule.json
+
+# 从标准输入中读取url,以便配合其他工具，组成你的工作流（例如：url-collector）
+url-collector -p socks://127.0.0.1:7890 -e google -k ".php?id=1" | go-wafw00f run -p socks://127.0.0.1:7890 --stdin -silent  
+```
+
+## 使用方法:
+go-wafw00f -h
+```
+NAME:
+   go-wafw00f - go-wafw00f
+
+USAGE:
+   go-wafw00f
+
+VERSION:
+   v0.0.1
+
+AUTHORS:
+   无在无不在 <2227627947@qq.com>
+   EmYiQing(原作者)
+
+COMMANDS:
+   run      探测waf类型
+   parse    解析wafw00f的规则库为json格式
+   help, h  Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --help, -h     show help (default: false)
+   --version, -v  print the version (default: false)
+
+```
+go-wafw00f run -h
+
+```shell
+NAME:
+   go-wafw00f run - 探测waf类型
+
+USAGE:
+   go-wafw00f run [command options] [arguments...]
+
+OPTIONS:
+   --url value, -u value             目标url
+   --rule_file_path value, -r value  规则文件路径 (default: "./rule.json")
+   --proxy value, -p value           代理,例如:socks://127.0.0.1:7890
+   --debug, -d                       调试模式 (default: false)
+   --silent                          静默模式，只输出探测结果和错误 (default: false)
+   --stdin                           从标准输入中读取url (default: false)
+   --routine value, -t value         协程数 (default: 1000)
+   --help, -h                        show help (default: false)
 ```
 
 
 ## 简单原理
 
-- parse 命令使用正则表达式来解析wafw00f的插件库，生成json文件 (todo:这是原作者的思路，但是这个思路问题大大的：对于any,all 没法完全解析，需要重新构思一个解决方案)
+- parse 命令使用正则表达式来解析wafw00f的插件库，生成json文件 
 - run 命令读取json格式的规则文件，探测waf
 
-### 如何解析py的规则库为json文件：
- 以正则表达式为key，cotent,header,cookie 为值，生成json文件
 
 ## 支持WAF列表
 ```

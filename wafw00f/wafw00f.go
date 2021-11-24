@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/ShangRui-hash/go-wafw00f/retryhttp"
 	"github.com/ShangRui-hash/go-wafw00f/util"
@@ -13,6 +14,7 @@ import (
 	"regexp"
 	"strings"
 
+	mapset "github.com/deckarep/golang-set"
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,14 +27,18 @@ var (
 )
 
 type WafW00f struct {
-	Wafs []Waf `json:"wafs"`
-	json jsoniter.API
+	Wafs           []Waf `json:"wafs"`
+	json           jsoniter.API
+	Knowledge      sync.Map
+	NotDetectedURL mapset.Set
 }
 
 func NewWafW00f() *WafW00f {
 	return &WafW00f{
-		Wafs: make([]Waf, 0),
-		json: jsoniter.ConfigCompatibleWithStandardLibrary,
+		Wafs:           make([]Waf, 0),
+		json:           jsoniter.ConfigCompatibleWithStandardLibrary,
+		Knowledge:      sync.Map{},
+		NotDetectedURL: mapset.NewSet(),
 	}
 }
 
@@ -51,7 +57,6 @@ func NewWaf() *Waf {
 
 //PraseJson 从json文件中读取规则
 func (w *WafW00f) ParseJsonFile(jsonFilePath string) error {
-	logrus.Debug("WAF Json Exist")
 	data, err := ioutil.ReadFile(jsonFilePath)
 	if err != nil {
 		logrus.Errorf("ioutil.ReadFile(%s) failed,err:%v", jsonFilePath, err)

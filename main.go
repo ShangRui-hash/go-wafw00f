@@ -35,7 +35,6 @@ func main() {
 						Name:        "url",
 						Aliases:     []string{"u"},
 						Usage:       "目标url",
-						Required:    true,
 						Destination: &settings.CurrentRunConf.URL,
 					},
 					&cli.StringFlag{
@@ -61,6 +60,18 @@ func main() {
 						Name:        "silent",
 						Usage:       "静默模式，只输出探测结果和错误",
 						Destination: &settings.CurrentRunConf.Silent,
+					},
+					&cli.BoolFlag{
+						Name:        "stdin",
+						Usage:       "从标准输入中读取url",
+						Destination: &settings.CurrentRunConf.Stdin,
+					},
+					&cli.IntFlag{
+						Name:        "routine",
+						Aliases:     []string{"t"},
+						Usage:       "协程数",
+						Value:       1000,
+						Destination: &settings.CurrentRunConf.Routine,
 					},
 				},
 				Action: controllers.Run,
