@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"go/build"
 	"os"
 
 	"github.com/ShangRui-hash/go-wafw00f/controllers"
@@ -44,7 +42,7 @@ func main() {
 						Name:        "rule_file_path",
 						Aliases:     []string{"r"},
 						Usage:       "规则文件路径",
-						Value:       fmt.Sprintf("%s/pkg/mod/github.com/!shang!rui-hash/go-wafw00f@v0.0.1/rule.json", build.Default.GOPATH),
+						Value:       "./rule.json",
 						Destination: &settings.CurrentRunConf.RuleFilePath,
 					},
 					&cli.BoolFlag{
