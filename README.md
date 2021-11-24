@@ -4,7 +4,10 @@
 
 - WAFW00F是一款优秀的web应用防火墙识别开源工具：https://github.com/EnableSecurity/wafw00f
 - 使用Golang重写的原因：Python环境配置不便利，Golang打包生成可执行文件直接运行
-- GO-WAFW00F forked from EmYiQing/go-wafw00f,由于作者不在维护，所以我接盘了,并对原来的代码进行大幅的修改。
+- GO-WAFW00F forked from EmYiQing/go-wafw00f,由于作者不再维护,所以只能自己fork仓库进行修改。
+
+## 更新
+对原来的代码进行了大幅度的修改，修改了解析python文件的方法以及程序的架构，添加了：多协程、从标准输入中读、代理模式等新功能
 
 
 ## 安装
