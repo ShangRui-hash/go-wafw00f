@@ -12,7 +12,7 @@ import (
 
 func Parse(c *cli.Context) error {
 	//0.初始化logger配置
-	logger.Init(settings.CurrentParseConf.Debug)
+	logger.Init(settings.CurrentParseConf.Debug, false)
 	w00f := wafw00f.NewWafW00f()
 	//1.读取LibDirPath下所有的规则文件，并将他们解析到内存中
 	if err := w00f.ParseLib(settings.CurrentParseConf.LibDirPath); err != nil {

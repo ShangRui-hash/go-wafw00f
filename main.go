@@ -45,11 +45,22 @@ func main() {
 						Value:       "./rule.json",
 						Destination: &settings.CurrentRunConf.RuleFilePath,
 					},
+					&cli.StringFlag{
+						Name:        "proxy",
+						Aliases:     []string{"p"},
+						Usage:       "代理,例如:socks://127.0.0.1:7890",
+						Destination: &settings.CurrentRunConf.Proxy,
+					},
 					&cli.BoolFlag{
 						Name:        "debug",
 						Aliases:     []string{"d"},
 						Usage:       "调试模式",
 						Destination: &settings.CurrentRunConf.Debug,
+					},
+					&cli.BoolFlag{
+						Name:        "silent",
+						Usage:       "静默模式，只输出探测结果和错误",
+						Destination: &settings.CurrentRunConf.Silent,
 					},
 				},
 				Action: controllers.Run,

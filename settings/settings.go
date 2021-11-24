@@ -10,6 +10,8 @@ type RunConfig struct {
 	URL          string
 	RuleFilePath string
 	Debug        bool
+	Silent       bool
+	Proxy        string
 }
 
 //ParseConfig is the configuration for the parse

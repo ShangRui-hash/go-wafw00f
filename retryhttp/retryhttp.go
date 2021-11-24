@@ -4,22 +4,35 @@ import (
 	"crypto/tls"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 
+	"github.com/ShangRui-hash/go-wafw00f/settings"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/sirupsen/logrus"
 )
 
 var client *http.Client
 
-func Init() {
+func Init() error {
 	retryClient := retryablehttp.NewClient()
 	retryClient.Logger = logrus.StandardLogger()
-	//跳过证书验证
-	retryClient.HTTPClient.Transport = &http.Transport{
+	tr := &http.Transport{
+		//跳过证书验证
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
+	//代理
+	if settings.CurrentRunConf.Proxy != "" {
+		proxy, err := url.Parse(settings.CurrentRunConf.Proxy)
+		if err != nil {
+			logrus.Error("url.Parse failed,err:", err)
+			return err
+		}
+		tr.Proxy = http.ProxyURL(proxy)
+	}
+	retryClient.HTTPClient.Transport = tr
 	client = retryClient.StandardClient()
+	return nil
 }
 
 type Resp struct {

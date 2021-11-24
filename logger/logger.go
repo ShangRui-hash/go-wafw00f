@@ -4,11 +4,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func Init(debug bool) error {
+func Init(debug, silent bool) error {
 	if debug {
 		logrus.SetLevel(logrus.DebugLevel)
-	} else {
+	}
+	if silent {
 		logrus.SetLevel(logrus.ErrorLevel)
+	}
+	if !silent && !debug {
+		logrus.SetLevel(logrus.InfoLevel)
 	}
 	return nil
 }

@@ -40,12 +40,14 @@ func Run(c *cli.Context) error {
 		return errors.New("url must start with http:// or https://")
 	}
 	//0.初始化logger配置
-	logger.Init(settings.CurrentRunConf.Debug)
+	logger.Init(settings.CurrentRunConf.Debug, settings.CurrentRunConf.Silent)
 	logrus.Debug("url:", settings.CurrentRunConf.URL)
 	logrus.Info("Start go-wafw00f")
 	//0.初始化retryhttp客户端
-	retryhttp.Init()
-
+	if err := retryhttp.Init(); err != nil {
+		logrus.Error("retryhttp init error:", err)
+		return err
+	}
 	w00f := wafw00f.NewWafW00f()
 	//1.解析waf识别规则文件
 	if err := w00f.ParseJsonFile(settings.CurrentRunConf.RuleFilePath); err != nil {

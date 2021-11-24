@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/ShangRui-hash/go-wafw00f/retryhttp"
 	"github.com/ShangRui-hash/go-wafw00f/util"
 	jsoniter "github.com/json-iterator/go"
 
@@ -16,10 +17,11 @@ import (
 )
 
 var (
-	nameRe    = regexp.MustCompile(`.*?NAME[\s]=[\s]'(.*?)'.*?`)
-	headerRe  = regexp.MustCompile(`.*?self.matchHeader\(\((.*?)\)\).*?`)
-	contentRe = regexp.MustCompile(`.*?self.matchContent\(r?[',"](.*?)[',"]\).*?`)
-	cookieRe  = regexp.MustCompile(`self.matchCookie\(r?'(.*?)'\).*?`)
+	nameRe         = regexp.MustCompile(`.*?NAME[\s]=[\s]'(.*?)'.*?`)
+	headerRe       = regexp.MustCompile(`.*?self.matchHeader\(\((.*?)\)\).*?`)
+	contentRe      = regexp.MustCompile(`.*?self.matchContent\(r?[',"](.*?)[',"]\).*?`)
+	cookieRe       = regexp.MustCompile(`self.matchCookie\(r?'(.*?)'\).*?`)
+	onlineJsonFile = "https://raw.githubusercontent.com/ShangRui-hash/go-wafw00f/master/rule.json"
 )
 
 type WafW00f struct {
@@ -53,7 +55,12 @@ func (w *WafW00f) ParseJsonFile(jsonFilePath string) error {
 	data, err := ioutil.ReadFile(jsonFilePath)
 	if err != nil {
 		logrus.Errorf("ioutil.ReadFile(%s) failed,err:%v", jsonFilePath, err)
-		return err
+		resp, err := retryhttp.Get(onlineJsonFile)
+		if err != nil {
+			logrus.Errorf("retryhttp.Get(%s) failed,err:%v", onlineJsonFile, err)
+			return err
+		}
+		data = []byte(resp.Body)
 	}
 	if err := w.json.Unmarshal(data, &w.Wafs); err != nil {
 		logrus.Error("WAF Unmarshal Error")
