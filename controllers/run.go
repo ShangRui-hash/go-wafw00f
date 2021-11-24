@@ -2,13 +2,13 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/ShangRui-hash/go-wafw00f/logger"
 	"github.com/ShangRui-hash/go-wafw00f/retryhttp"
 	"github.com/ShangRui-hash/go-wafw00f/settings"
-	"github.com/ShangRui-hash/go-wafw00f/util"
-	"github.com/ShangRui-hash/go-wafw00f/waf"
+	"github.com/ShangRui-hash/go-wafw00f/wafw00f"
 
 	"github.com/sirupsen/logrus"
 	cli "github.com/urfave/cli/v2"
@@ -36,27 +36,29 @@ var (
 )
 
 func Run(c *cli.Context) error {
+	if !strings.HasPrefix(settings.CurrentRunConf.URL, "http://") && !strings.HasPrefix(settings.CurrentRunConf.URL, "https://") {
+		return errors.New("url must start with http:// or https://")
+	}
 	//0.初始化logger配置
 	logger.Init(settings.CurrentRunConf.Debug)
 	logrus.Debug("url:", settings.CurrentRunConf.URL)
 	logrus.Info("Start go-wafw00f")
 	//0.初始化retryhttp客户端
 	retryhttp.Init()
-	//1.解析waf识别规则库
-	if err := waf.Init(settings.CurrentRunConf.RuleFilePath); err != nil {
+
+	w00f := wafw00f.NewWafW00f()
+	//1.解析waf识别规则文件
+	if err := w00f.ParseJsonFile(settings.CurrentRunConf.RuleFilePath); err != nil {
 		logrus.Error("waf.Init failed,err:", err)
 		return err
 	}
 	//2.开始探测waf类型
-	if !strings.HasPrefix(settings.CurrentRunConf.URL, "http://") && !strings.HasPrefix(settings.CurrentRunConf.URL, "https://") {
-		return errors.New("url must start with http:// or https://")
-	}
 	payloads := append(append(append(sqlPayloads, xssPayloads...), rcePayloads...), includePayload, xxePayload)
-	res, err := waf.DetectWaf(settings.CurrentRunConf.URL, payloads)
+	res, err := w00f.DetectWaf(settings.CurrentRunConf.URL, payloads)
 	if err != nil {
 		logrus.Error("waf.DetectWaf failed,err:", err)
 		return err
 	}
-	util.PrintWafResult(res)
+	fmt.Println(res)
 	return nil
 }
