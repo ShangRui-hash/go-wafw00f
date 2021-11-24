@@ -28,6 +28,9 @@ go-wafw00f parse --lib ./lib -dst rule.json
 - parse 命令使用正则表达式来解析wafw00f的插件库，生成json文件 (todo:这是原作者的思路，但是这个思路问题大大的：对于any,all 没法完全解析，需要重新构思一个解决方案)
 - run 命令读取json格式的规则文件，探测waf
 
+### 如何解析py的规则库为json文件：
+ 以正则表达式为key，cotent,header,cookie 为值，生成json文件
+
 ## 支持WAF列表
 ```
   WAF Name                        Manufacturer
